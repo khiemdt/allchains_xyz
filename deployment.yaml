@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: allchains-fe
+  namespace: allchains-fe
+spec:
+  replicas: 1
+  progressDeadlineSeconds: 600
+  selector:
+    matchLabels:
+      name: allchains-fe
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        name: allchains-fe
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - allchains-fe
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+      containers:
+        - name: allchains-fe
+          image: asia.gcr.io/otoke-282610/all-chain-web:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+          resources:
+            requests:
+              memory: '7Mi'
+              cpu: '5m'
+            limits:
+              memory: '15Mi'
+              cpu: '10m'
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: allchains-fe
+  name: allchains-fe
+  namespace: allchains-fe
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+  selector:
+    name: allchains-fe
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    ingress.kubernetes.io/add-base-url: "true"
+  name: allchains-fe
+  namespace: allchains-fe
+spec:
+  rules:
+    - host: allchains.xyz
+      http:
+        paths:
+          - backend:
+              serviceName: allchains-fe
+              servicePort: 80
+            path: /

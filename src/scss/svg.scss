@@ -1,0 +1,13 @@
+.svgFill * {
+  fill: currentColor;
+  stroke: inherit;
+}
+
+.svgStroke * {
+  fill: inherit;
+  stroke: currentColor;
+}
+
+svg {
+  display: block;
+}
